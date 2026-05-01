@@ -3,9 +3,40 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MacBulwark — A quiet firewall for macOS</title>
-<meta name="description" content="MacBulwark is a personal firewall for macOS. Block any app from connecting to the internet, or filter it down to just the domains you trust." />
+<title>MacBulwark — A quiet personal firewall for macOS</title>
+<meta name="description" content="MacBulwark is a personal firewall for macOS. Block any app from talking to the internet, or filter it down to just the domains you trust. Stops telemetry, analytics, and updaters." />
+<meta name="keywords" content="macOS firewall, mac firewall, personal firewall mac, application firewall macOS, per-app firewall, block app internet mac, block telemetry mac, stop analytics macOS, network extension firewall, outgoing firewall mac, Little Snitch alternative, Apple Silicon firewall" />
+<meta name="author" content="MacBulwark" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="googlebot" content="index, follow" />
+<meta name="theme-color" content="#1f4448" />
+<meta name="color-scheme" content="light" />
+<meta name="apple-mobile-web-app-title" content="MacBulwark" />
+<meta name="application-name" content="MacBulwark" />
+<meta name="format-detection" content="telephone=no" />
+
+<link rel="canonical" href="https://halebop17.github.io/mac-bulwark/" />
 <link rel="icon" type="image/png" href="assets/app-icon.png" />
+<link rel="apple-touch-icon" href="assets/app-icon.png" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="MacBulwark" />
+<meta property="og:title" content="MacBulwark — A quiet personal firewall for macOS" />
+<meta property="og:description" content="Block any macOS app from talking to the internet, or filter it down to just the domains you trust. Rules live in a system extension, so blocking sticks even when the app is closed." />
+<meta property="og:url" content="https://halebop17.github.io/mac-bulwark/" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image" content="https://halebop17.github.io/mac-bulwark/assets/app-screenshot.png" />
+<meta property="og:image:secure_url" content="https://halebop17.github.io/mac-bulwark/assets/app-screenshot.png" />
+<meta property="og:image:alt" content="MacBulwark main window showing four monitored apps with blocked, filtered, and allowed states." />
+<meta property="og:image:type" content="image/png" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="MacBulwark — A quiet personal firewall for macOS" />
+<meta name="twitter:description" content="Block any macOS app from the internet, or filter it down to the domains you trust. Stops telemetry, analytics, and updaters. One-time $7." />
+<meta name="twitter:image" content="https://halebop17.github.io/mac-bulwark/assets/app-screenshot.png" />
+<meta name="twitter:image:alt" content="MacBulwark main window showing four monitored apps with blocked, filtered, and allowed states." />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -385,12 +416,13 @@
     border-top: 1px solid rgba(255,255,255,0.12);
     padding-top: 18px;
   }
-  .callout h4 {
+  .callout h3 {
     font-family: var(--font-sans);
     font-weight: 600;
     font-size: 15px;
     margin: 0 0 6px;
     color: #f5efe7;
+    letter-spacing: -0.005em;
   }
   .callout p {
     margin: 0;
@@ -425,8 +457,9 @@
     color: var(--coral);
     letter-spacing: 0.08em;
   }
-  .step h4 {
+  .step h3 {
     margin: 0;
+    font-family: var(--font-sans);
     font-size: 18px;
     font-weight: 600;
     letter-spacing: -0.005em;
@@ -648,6 +681,130 @@
     to   { transform: translateX(-50%); }
   }
 </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "MacBulwark",
+  "alternateName": "Mac Bulwark",
+  "description": "MacBulwark is a personal firewall for macOS. Block any app from talking to the internet, or filter it down to just the domains you trust. Rules live in a system network extension, so blocking sticks even when the app is closed.",
+  "url": "https://halebop17.github.io/mac-bulwark/",
+  "image": "https://halebop17.github.io/mac-bulwark/assets/app-icon.png",
+  "screenshot": "https://halebop17.github.io/mac-bulwark/assets/app-screenshot.png",
+  "applicationCategory": "SecurityApplication",
+  "applicationSubCategory": "Firewall",
+  "operatingSystem": "macOS 13 Ventura, macOS 14 Sonoma, macOS 15 Sequoia",
+  "processorRequirements": "Apple Silicon or Intel",
+  "fileSize": "14 MB",
+  "softwareVersion": "1.0",
+  "downloadUrl": "https://monokern.app/b/macbulwark-trial",
+  "installUrl": "https://monokern.app/b/macbulwark-trial",
+  "featureList": [
+    "Block any app's outgoing internet traffic",
+    "Filter apps to allow only trusted domains",
+    "Per-domain rules with purpose tags",
+    "Live network monitor for outgoing connections",
+    "Persistent system network extension enforcement",
+    "Local-only — no telemetry, no analytics"
+  ],
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free trial",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Full-featured 24-hour trial",
+      "url": "https://monokern.app/b/macbulwark-trial"
+    },
+    {
+      "@type": "Offer",
+      "name": "MacBulwark licence",
+      "price": "7",
+      "priceCurrency": "USD",
+      "description": "One-time purchase, two-machine activations included",
+      "url": "https://monokern.app/b/mac-bulwark-firewall"
+    }
+  ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "Monokern",
+    "url": "https://monokern.app/"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does blocking still work when MacBulwark is closed?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Rules live in a system network extension that runs independently. Once installed, it starts on every boot and enforces blocks until you explicitly remove them."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the difference between Blocked and Filtered?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Blocked drops every connection from that app. Filtered is denylist-based: only domains you've explicitly marked as blocked are dropped — everything else passes through. Allowed apps aren't sent to the extension at all."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will it slow my Mac down?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The extension only inspects traffic from apps you've added. Apps in the Allowed state aren't touched. In practice the overhead is negligible."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it send any data anywhere?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No telemetry, no analytics. Licence verification talks once to Payhip when you register or unregister, and that's the only outbound request MacBulwark makes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What macOS versions are supported?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "macOS 13 Ventura and later, on Apple Silicon and Intel. The system extension API requires modern macOS."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I move my licence to a new Mac?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Open the licence dialog and click Unregister to deactivate the current machine on Payhip, then enter the same key on the new one."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MacBulwark",
+  "url": "https://halebop17.github.io/mac-bulwark/",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Monokern",
+    "url": "https://monokern.app/"
+  }
+}
+</script>
+
 </head>
 <body>
 
@@ -764,15 +921,15 @@
 
     <div class="callouts">
       <div class="callout">
-        <h4>Per-domain control</h4>
+        <h3>Per-domain control</h3>
         <p>Expand any app to see exactly which hostnames it talks to, with purpose tags so you know what each one is for.</p>
       </div>
       <div class="callout">
-        <h4>Live network monitor</h4>
+        <h3>Live network monitor</h3>
         <p>The Activity tab shows recent connections per app. Block any app you didn't expect with one click.</p>
       </div>
       <div class="callout">
-        <h4>One firewall switch</h4>
+        <h3>One firewall switch</h3>
         <p>The bottom bar tells you the extension is alive and enforcing. No guesswork, no ambiguous tray icons.</p>
       </div>
     </div>
@@ -790,22 +947,22 @@
     <div class="steps">
       <div class="step">
         <span class="n">STEP 01</span>
-        <h4>Install &amp; approve</h4>
+        <h3>Install &amp; approve</h3>
         <p>Drag the app to /Applications, click Enable, and approve the system extension once in System Settings.</p>
       </div>
       <div class="step">
         <span class="n">STEP 02</span>
-        <h4>Add an app</h4>
+        <h3>Add an app</h3>
         <p>Hit the + button, pick any app from /Applications, and it's added with all connections blocked by default.</p>
       </div>
       <div class="step">
         <span class="n">STEP 03</span>
-        <h4>Tune by domain</h4>
+        <h3>Tune by domain</h3>
         <p>Click a row to expand its domain list. Allow what you trust, block what you don't, edit purpose tags.</p>
       </div>
       <div class="step">
         <span class="n">STEP 04</span>
-        <h4>Forget about it</h4>
+        <h3>Forget about it</h3>
         <p>The extension keeps enforcing rules even after you quit the app. Open MacBulwark only when you want to change something.</p>
       </div>
     </div>
