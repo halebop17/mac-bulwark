@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MacBulwark — A quiet firewall for macOS</title>
+<meta name="description" content="MacBulwark is a personal firewall for macOS. Block any app from connecting to the internet, or filter it down to just the domains you trust." />
+<link rel="icon" type="image/png" href="assets/app-icon.png" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --teal-900: #16363a;
+    --teal-800: #1f4448;
+    --teal-700: #2a5559;
+    --teal-50:  #e8efef;
+
+    --paper:    #f5efe7;
+    --paper-2:  #ece4d6;
+    --ink:      #0e2024;
+    --ink-2:    #2b3e42;
+    --muted:    #6b7e80;
+    --line:     #d9d0c1;
+    --line-dark: #2c4f53;
+
+    --coral:    #e36b4f;
+    --coral-2:  #c95736;
+    --yellow:   #e8c76b;
+    --green:    #5fb487;
+    --red:      #d9645a;
+
+    --r-sm: 8px;
+    --r-md: 14px;
+    --r-lg: 22px;
+    --r-xl: 32px;
+
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; }
+
+  /* ---------- layout primitives ---------- */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .eyebrow.on-dark { color: #9eb6b8; }
+
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.08;
+    margin: 0;
+  }
+  .h1 { font-size: clamp(48px, 7.4vw, 104px); }
+  .h2 { font-size: clamp(36px, 4.8vw, 64px); }
+  .h3 { font-size: clamp(24px, 2.6vw, 32px); }
+
+  .lede {
+    font-size: clamp(18px, 1.6vw, 21px);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 620px;
+  }
+  .lede.on-dark { color: #c8d6d7; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.4);
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(95,180,135,0.18); }
+  .pill.on-dark { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.14); color: #d3dedf; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 15px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
+    cursor: pointer;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: var(--coral);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--coral-2); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn-ghost:hover { background: rgba(0,0,0,0.04); }
+  .btn-ghost-dark {
+    background: transparent;
+    color: #f0e9df;
+    border-color: rgba(255,255,255,0.22);
+  }
+  .btn-ghost-dark:hover { background: rgba(255,255,255,0.06); }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(245,239,231,0.78);
+    backdrop-filter: saturate(140%) blur(10px);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .brand img {
+    width: 28px; height: 28px; border-radius: 7px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .brand .dot { font-family: var(--font-serif); color: var(--coral); font-size: 18px; line-height: 1; }
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta { font-size: 13px; padding: 9px 16px; }
+  @media (max-width: 760px) {
+    .nav-links a:not(.nav-cta) { display: none; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    position: relative;
+    padding: 64px 0 80px;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+  .hero h1 .accent { color: var(--coral); font-style: italic; }
+  .hero h1 .ink-soft { color: var(--ink-2); font-style: italic; }
+  .hero-sub {
+    margin-top: 40px;
+  }
+  .hero-actions {
+    margin-top: 36px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .meta-line {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    display: flex; gap: 18px; flex-wrap: wrap;
+  }
+  .meta-line span { display: inline-flex; align-items: center; gap: 6px; }
+  .meta-line svg { color: var(--ink-2); }
+
+  .icon-stage {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    max-width: 460px;
+    margin-left: auto;
+  }
+  .icon-stage::before {
+    content: "";
+    position: absolute;
+    inset: -8% -8% -12% -8%;
+    background: radial-gradient(60% 60% at 50% 50%, rgba(31,68,72,0.10), transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+  .icon-stage img {
+    position: relative;
+    width: 100%;
+    border-radius: 22%;
+    box-shadow:
+      0 30px 60px -20px rgba(31,68,72,0.45),
+      0 6px 18px -6px rgba(0,0,0,0.18);
+    z-index: 1;
+  }
+  .floater {
+    position: absolute;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -12px rgba(20,40,42,0.25), 0 2px 6px rgba(0,0,0,0.06);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    z-index: 2;
+  }
+  .floater .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .badge.blocked { background: #fde6e3; color: #9c3424; }
+  .badge.filtered { background: #fbeec1; color: #6b4f10; }
+  .badge.allowed { background: #d8efdf; color: #1f5d3a; }
+
+  .floater.f1 { top: 6%; left: 4%; }
+  .floater.f2 { bottom: 10%; right: -4%; }
+  @media (max-width: 900px) {
+    .floater.f1 { left: 6%; }
+    .floater.f2 { right: 2%; }
+  }
+  @media (max-width: 520px) {
+    .floater { display: none; }
+  }
+
+  /* ---------- section base ---------- */
+  section { padding: 96px 0; }
+  @media (max-width: 700px) { section { padding: 72px 0; } }
+
+  .section-head {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 56px;
+    max-width: 760px;
+  }
+
+  /* ---------- features ---------- */
+  .features {
+    background: var(--paper);
+    border-top: 1px solid var(--line);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: #fbf7f0;
+  }
+  @media (max-width: 880px) {
+    .features-grid { grid-template-columns: 1fr; }
+  }
+  .feature {
+    padding: 36px 32px 40px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .feature:last-child { border-right: none; }
+  @media (max-width: 880px) {
+    .feature { border-right: none; border-bottom: 1px solid var(--line); }
+    .feature:last-child { border-bottom: none; }
+  }
+  .feature .num {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 32px;
+    color: var(--coral);
+    line-height: 1;
+  }
+  .feature h3 {
+    margin: 4px 0 0;
+    font-family: var(--font-sans);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .feature p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* ---------- showcase (dark) ---------- */
+  .showcase {
+    background: var(--teal-800);
+    color: #f0e9df;
+    position: relative;
+    overflow: hidden;
+  }
+  .showcase::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(60% 50% at 80% 0%, rgba(227,107,79,0.18), transparent 60%),
+      radial-gradient(50% 50% at 0% 100%, rgba(255,255,255,0.04), transparent 60%);
+    pointer-events: none;
+  }
+  .showcase .wrap { position: relative; z-index: 1; }
+  .showcase .h2 { color: #f5efe7; }
+  .showcase .h2 em { color: var(--coral); font-style: italic; }
+  .showcase-shot {
+    margin-top: 56px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 28px;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.5);
+  }
+  @media (max-width: 700px) {
+    .showcase-shot { padding: 14px; }
+  }
+  .showcase-shot img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.55);
+  }
+  .callouts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+  }
+  @media (max-width: 760px) {
+    .callouts { grid-template-columns: 1fr; }
+  }
+  .callout {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    padding-top: 18px;
+  }
+  .callout h4 {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0 0 6px;
+    color: #f5efe7;
+  }
+  .callout p {
+    margin: 0;
+    color: #b9c8c9;
+    font-size: 14px;
+  }
+
+  /* ---------- how it works ---------- */
+  .how {
+    background: var(--paper-2);
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+  @media (max-width: 900px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+  .step {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 24px 22px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 200px;
+  }
+  .step .n {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--coral);
+    letter-spacing: 0.08em;
+  }
+  .step h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .step p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 14.5px;
+  }
+
+  /* ---------- labels section ---------- */
+  .labels {
+    background: var(--paper);
+  }
+  .labels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .label-card {
+    background: #fbf7f0;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 18px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .label-tag {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #efe7d6;
+    color: var(--ink-2);
+    border: 1px solid var(--line);
+  }
+  .label-tag.sensitive {
+    background: #fbeec1;
+    border-color: #e6d28a;
+    color: #6b4f10;
+  }
+  .label-card p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  /* ---------- pricing ---------- */
+  .pricing {
+    background: var(--paper-2);
+  }
+  .price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 760px) { .price-grid { grid-template-columns: 1fr; } }
+  .price-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 36px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .price-card.featured {
+    background: var(--teal-800);
+    color: #f0e9df;
+    border-color: var(--teal-800);
+  }
+  .price-card.featured .price-meta { color: #b9c8c9; }
+  .price-card .price-title {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.005em;
+  }
+  .price-card .price-amount {
+    font-family: var(--font-serif);
+    font-size: 64px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .price-card .price-amount small {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+  .price-card.featured .price-amount small { color: #9eb6b8; }
+  .price-meta { color: var(--ink-2); font-size: 14.5px; }
+  .price-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14.5px;
+  }
+  .price-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .price-list .check {
+    flex: 0 0 auto;
+    width: 18px; height: 18px; margin-top: 2px;
+    border-radius: 50%;
+    background: var(--green);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .price-card.featured .price-list .check {
+    background: var(--coral);
+  }
+
+  /* ---------- faq ---------- */
+  .faq {
+    background: var(--paper);
+  }
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 56px;
+  }
+  @media (max-width: 800px) { .faq-grid { grid-template-columns: 1fr; gap: 32px; } }
+  details {
+    border-top: 1px solid var(--line);
+    padding: 22px 0;
+  }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  details summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--ink);
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after {
+    content: "+";
+    font-family: var(--font-serif);
+    font-size: 28px;
+    color: var(--coral);
+    line-height: 0.7;
+    transition: transform .2s ease;
+  }
+  details[open] summary::after { content: "–"; }
+  details p {
+    margin: 14px 0 0;
+    color: var(--ink-2);
+    font-size: 15px;
+    max-width: 60ch;
+  }
+
+  /* ---------- footer cta ---------- */
+  .footer-cta {
+    background: var(--teal-900);
+    color: #f0e9df;
+    text-align: center;
+  }
+  .footer-cta .h2 em { color: var(--coral); font-style: italic; }
+  .footer-cta .lede.on-dark { margin: 20px auto 0; }
+  .footer-cta .actions {
+    margin-top: 36px;
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+
+  footer.foot {
+    background: var(--teal-900);
+    color: #94a9ab;
+    padding: 36px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    font-size: 13px;
+  }
+  .foot-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px; flex-wrap: wrap;
+  }
+  .foot-links { display: flex; gap: 22px; }
+  .foot-links a { text-decoration: none; color: #b9c8c9; }
+  .foot-links a:hover { color: #fff; }
+
+  /* ---------- decorative diagonal divider strip ---------- */
+  .strip {
+    background: var(--coral);
+    color: #fff5ee;
+    overflow: hidden;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .strip-track {
+    display: flex;
+    gap: 48px;
+    padding: 16px 0;
+    white-space: nowrap;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    animation: marquee 38s linear infinite;
+  }
+  .strip-track span { display: inline-flex; align-items: center; gap: 48px; }
+  .strip-track .sep {
+    width: 8px; height: 8px; border-radius: 50%; background: #fff5ee; opacity: 0.7;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <img src="assets/app-icon.png" alt="" />
+      <span>MacBulwark</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn btn-primary nav-cta" href="https://monokern.app/b/macbulwark-trial">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill"><span class="dot"></span> macOS · Network extension</span>
+      <h1 class="display h1" style="margin-top:24px;">
+        A quiet&nbsp;firewall<br />
+        for the apps that <span class="accent">won't&nbsp;quiet&nbsp;down.</span>
+      </h1>
+      <p class="lede hero-sub">
+        MacBulwark lets you block any app from talking to the internet — or filter it down to
+        just the domains you trust. Rules live in a system extension, so blocking sticks even
+        when the app is closed.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://monokern.app/b/macbulwark-trial">Download Trial</a>
+        <a class="btn btn-ghost" href="#how">See how it works →</a>
+      </div>
+      <div class="meta-line">
+        <span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/></svg>
+          Local-only · no data collection
+        </span>
+        <span>·</span>
+        <span>24-hour free trial</span>
+        <span>·</span>
+        <span>Apple Silicon &amp; Intel</span>
+      </div>
+    </div>
+
+    <div class="icon-stage">
+      <img src="assets/app-icon.png" alt="MacBulwark app icon — a metallic dial split between coral red and teal." />
+      <div class="floater f1">
+        <span class="badge blocked">Blocked</span>
+        <span style="color:var(--ink-2)">data.telemetry</span>
+      </div>
+      <div class="floater f2">
+        <span class="badge filtered">Filtered</span>
+        <span style="color:var(--ink-2)">Adobe Lightroom</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="strip" aria-hidden="true">
+  <div class="strip-track">
+    <span>Block telemetry<span class="sep"></span>Stop analytics<span class="sep"></span>Silence updaters<span class="sep"></span>Trust by domain<span class="sep"></span>Keep your traffic local<span class="sep"></span></span>
+    <span>Block telemetry<span class="sep"></span>Stop analytics<span class="sep"></span>Silence updaters<span class="sep"></span>Trust by domain<span class="sep"></span>Keep your traffic local<span class="sep"></span></span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">What it does</span>
+      <h2 class="display h2">Three switches.<br/>That's the whole product.</h2>
+      <p class="lede">Apps live in one of three states. You decide which one — per app, or per domain.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature">
+        <span class="num">01</span>
+        <span class="badge blocked" style="align-self:flex-start;display:inline-flex;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;background:#fde6e3;color:#9c3424;">Blocked</span>
+        <h3>Drop every connection</h3>
+        <p>Add an app and all its outgoing traffic stops. No background updaters, no telemetry, no licence pings — until you say otherwise.</p>
+      </div>
+      <div class="feature">
+        <span class="num">02</span>
+        <span class="badge filtered" style="align-self:flex-start;display:inline-flex;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;background:#fbeec1;color:#6b4f10;">Filtered</span>
+        <h3>Block only what you don't trust</h3>
+        <p>Expand any app to see its domains. Block the analytics endpoint, allow the licence server. The rest passes through unchanged.</p>
+      </div>
+      <div class="feature">
+        <span class="num">03</span>
+        <span class="badge allowed" style="align-self:flex-start;display:inline-flex;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;background:#d8efdf;color:#1f5d3a;">Allowed</span>
+        <h3>Out of the way</h3>
+        <p>Apps you trust aren't sent to the extension at all. Zero overhead, zero filtering — just monitored if you want it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase" id="showcase">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark">The whole interface</span>
+      <h2 class="display h2">One window.<br/>One <em>switch</em>. Everything visible.</h2>
+      <p class="lede on-dark">No menubar maze, no nested settings panes. Every monitored app, every rule, the firewall toggle — all on one screen.</p>
+    </div>
+
+    <div class="showcase-shot">
+      <img src="assets/app-screenshot.png" alt="MacBulwark main window showing four monitored apps with blocked, filtered, and allowed states." />
+    </div>
+
+    <div class="callouts">
+      <div class="callout">
+        <h4>Per-domain control</h4>
+        <p>Expand any app to see exactly which hostnames it talks to, with purpose tags so you know what each one is for.</p>
+      </div>
+      <div class="callout">
+        <h4>Live network monitor</h4>
+        <p>The Activity tab shows recent connections per app. Block any app you didn't expect with one click.</p>
+      </div>
+      <div class="callout">
+        <h4>One firewall switch</h4>
+        <p>The bottom bar tells you the extension is alive and enforcing. No guesswork, no ambiguous tray icons.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">How it works</span>
+      <h2 class="display h2">Four steps to a quieter Mac.</h2>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <span class="n">STEP 01</span>
+        <h4>Install &amp; approve</h4>
+        <p>Drag the app to /Applications, click Enable, and approve the system extension once in System Settings.</p>
+      </div>
+      <div class="step">
+        <span class="n">STEP 02</span>
+        <h4>Add an app</h4>
+        <p>Hit the + button, pick any app from /Applications, and it's added with all connections blocked by default.</p>
+      </div>
+      <div class="step">
+        <span class="n">STEP 03</span>
+        <h4>Tune by domain</h4>
+        <p>Click a row to expand its domain list. Allow what you trust, block what you don't, edit purpose tags.</p>
+      </div>
+      <div class="step">
+        <span class="n">STEP 04</span>
+        <h4>Forget about it</h4>
+        <p>The extension keeps enforcing rules even after you quit the app. Open MacBulwark only when you want to change something.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOMAIN LABELS -->
+<section class="labels" id="labels">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Domain purpose labels</span>
+      <h2 class="display h2">Know what every connection<br/>is&nbsp;<em style="font-style:italic;color:var(--coral)">actually for</em>.</h2>
+      <p class="lede">Every domain MacBulwark detects gets a tag so you can decide at a glance. Yellow tags are sensitive — usually data leaving your machine.</p>
+    </div>
+
+    <div class="labels-grid">
+      <div class="label-card"><span class="label-tag sensitive">telemetry</span><p>Crash and diagnostics data sent back to the developer.</p></div>
+      <div class="label-card"><span class="label-tag sensitive">analytics</span><p>Usage statistics and behavioural tracking.</p></div>
+      <div class="label-card"><span class="label-tag">cdn</span><p>Content delivery — images, fonts, static assets.</p></div>
+      <div class="label-card"><span class="label-tag">auth</span><p>Login, OAuth, or identity verification.</p></div>
+      <div class="label-card"><span class="label-tag">sync</span><p>Data sync with a cloud service or server.</p></div>
+      <div class="label-card"><span class="label-tag">account</span><p>Account management and user profiles.</p></div>
+      <div class="label-card"><span class="label-tag">playback</span><p>Audio or video streaming.</p></div>
+      <div class="label-card"><span class="label-tag">metadata</span><p>Catalogue, search, or library data.</p></div>
+      <div class="label-card"><span class="label-tag">update</span><p>Software update checks and downloads.</p></div>
+      <div class="label-card"><span class="label-tag">ai</span><p>AI/ML inference endpoints.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Pricing</span>
+      <h2 class="display h2">Try it for a day.<br/>Buy it once.</h2>
+      <p class="lede">A flat licence, no subscription. Trial mode is full-featured for 24 hours so you can actually evaluate it.</p>
+    </div>
+
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-title">Free trial</div>
+        <div class="price-amount">$0<small>for 24 hours</small></div>
+        <p class="price-meta">Every feature unlocked. Unlimited apps. The countdown is the only difference.</p>
+        <ul class="price-list">
+          <li><span class="check">✓</span> Unlimited monitored apps</li>
+          <li><span class="check">✓</span> Per-domain rules</li>
+          <li><span class="check">✓</span> Network monitor</li>
+          <li><span class="check">✓</span> Persistent system extension</li>
+        </ul>
+        <div style="margin-top:auto"><a class="btn btn-ghost" href="https://monokern.app/b/macbulwark-trial" style="width:100%">Download trial</a></div>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-title">MacBulwark licence</div>
+        <div class="price-amount" style="color:#f5efe7">$7<small>one-time</small></div>
+        <p class="price-meta">Buy once, use forever. Two-machine activations included. Free updates for the current major version.</p>
+        <ul class="price-list">
+          <li><span class="check">✓</span> Everything in the trial</li>
+          <li><span class="check">✓</span> No 24-hour limit</li>
+          <li><span class="check">✓</span> Two activations per licence</li>
+          <li><span class="check">✓</span> Email support</li>
+        </ul>
+        <div style="margin-top:auto"><a class="btn btn-primary" href="https://monokern.app/b/mac-bulwark-firewall" style="width:100%">Buy a licence</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="wrap faq-grid">
+    <div>
+      <span class="eyebrow">Frequently asked</span>
+      <h2 class="display h2" style="margin-top:14px;">Questions, answered.</h2>
+      <p class="lede" style="margin-top:20px;">If you don't see yours here, the manual covers the deep end of how rules are enforced.</p>
+    </div>
+    <div>
+      <details open>
+        <summary>Does blocking still work when MacBulwark is closed?</summary>
+        <p>Yes. Rules live in a system network extension that runs independently. Once installed, it starts on every boot and enforces blocks until you explicitly remove them.</p>
+      </details>
+      <details>
+        <summary>What's the difference between Blocked and Filtered?</summary>
+        <p>Blocked drops every connection from that app. Filtered is denylist-based: only domains you've explicitly marked as blocked are dropped — everything else passes through. Allowed apps aren't sent to the extension at all.</p>
+      </details>
+      <details>
+        <summary>Will it slow my Mac down?</summary>
+        <p>The extension only inspects traffic from apps you've added. Apps in the Allowed state aren't touched. In practice the overhead is negligible.</p>
+      </details>
+      <details>
+        <summary>Does it send any data anywhere?</summary>
+        <p>No telemetry, no analytics. Licence verification talks once to Payhip when you register or unregister, and that's the only outbound request MacBulwark makes.</p>
+      </details>
+      <details>
+        <summary>What macOS versions are supported?</summary>
+        <p>macOS 13 Ventura and later, on Apple Silicon and Intel. The system extension API requires modern macOS.</p>
+      </details>
+      <details>
+        <summary>Can I move my licence to a new Mac?</summary>
+        <p>Yes. Open the licence dialog and click Unregister to deactivate the current machine on Payhip, then enter the same key on the new one.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="footer-cta" id="download">
+  <div class="wrap">
+    <span class="eyebrow on-dark">Download</span>
+    <h2 class="display h2" style="margin-top:14px;">Quiet your Mac in the next <em>five minutes</em>.</h2>
+    <p class="lede on-dark">Install, approve the extension, and add the first noisy app. The trial gives you 24 hours to decide.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://monokern.app/b/macbulwark-trial">Download Trial</a>
+      <a class="btn btn-ghost-dark" href="https://github.com/halebop17/mac-bulwark/blob/main/manual.md">Read the manual</a>
+    </div>
+    <p style="margin-top:24px;color:#7f9698;font-size:13px;">Universal binary · 14 MB · macOS 13+</p>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <div>© 2026 MacBulwark. Built for a quieter Mac.</div>
+    <div class="foot-links">
+      <a href="https://github.com/halebop17/mac-bulwark/blob/main/manual.md">Manual</a>
+      <a href="https://monokern.app/contact">Support</a>
+      <a href="https://monokern.app/privacy">Privacy</a>
+      <a href="https://monokern.app/b/mac-bulwark-firewall">Buy licence</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
