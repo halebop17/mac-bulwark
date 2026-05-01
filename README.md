@@ -4,6 +4,8 @@ MacBulwark is a macOS firewall app that puts you back in control of what your ap
 
 Once configured, blocking stays in place even when MacBulwark is closed — the rules are enforced at the system level, so you do not need to keep the app running.
 
+**[Website](https://halebop17.github.io/mac-bulwark/) · [User manual](https://github.com/halebop17/mac-bulwark/blob/main/manual.md)**
+
 ## Features
 
 ### App-level blocking
