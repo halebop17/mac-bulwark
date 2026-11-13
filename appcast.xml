@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>MacBulwark</title>
+        <item>
+            <title>MacBulwark 1.5.0</title>
+            <pubDate>Fri, 13 Nov 2026 18:01:41 +0000</pubDate>
+            <sparkle:version>14</sparkle:version>
+            <sparkle:shortVersionString>1.5.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+<p>MacBulwark 1.5 brings a new design, allow-lists, and a firewall that really blocks.</p>
+<h3>The firewall works</h3>
+<ul>
+<li>In earlier versions macOS never switched on MacBulwark's network filter, so your rules weren't enforced. 1.5 fixes this.</li>
+<li>After installing, turn the firewall on and approve MacBulwark once in System Settings ▸ General ▸ Login Items &amp; Extensions ▸ Network Extensions. The setup guide walks you through it.</li>
+</ul>
+<h3>Allow-lists</h3>
+<ul>
+<li>Every app has an "Everything else" setting: block everything except the domains you allow, or allow everything except the domains you block.</li>
+<li>The more specific domain wins, so you can allow spotify.com and still block log.spotify.com.</li>
+<li>Helper processes, such as Chrome's, follow their app's rule.</li>
+</ul>
+<h3>A new look</h3>
+<ul>
+<li>New design and icon, in light and dark. Choose Light, Dark or Match system in Settings ▸ Appearance.</li>
+<li>Activity: open an app to see every domain it contacted, and block or allow each one, with Undo.</li>
+</ul>
+<h3>Also new</h3>
+<ul>
+<li>MacBulwark now updates itself: it checks for new versions about once a day. To check right away, choose MacBulwark ▸ Check for Updates…</li>
+<li>Try MacBulwark free for 7 days.</li>
+<li>Dropping an audio plug-in on the window explains how to block it through your music app.</li>
+</ul>
+            ]]></description>
+            <enclosure url="https://github.com/halebop17/mac-bulwark/releases/download/v1.5.0/MacBulwark-1.5.0.dmg" type="application/octet-stream" sparkle:edSignature="KWPrBNJqshP6dS/gvwb2aFcOkRqEFngioavlyJzZgKATNymJ+oXoIaOmz7ojiQfeAkdUbsLHbeJ7W3oa8zNVBQ==" length="3445347"/>
+        </item>
+    </channel>
+</rss>
